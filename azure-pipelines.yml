@@ -6,20 +6,58 @@ trigger:
 pool:
   vmImage: 'ubuntu-latest'
 
-steps:
+stages:
 
-# 1. Checkout source code
-- checkout: self
-  displayName: 'Checkout Source Code'
+# ============================================================
+# STAGE 1: BUILD
+# ============================================================
+- stage: Build
+  displayName: 'Build Application'
 
- # 2. Install Python
-- task: UsePythonVersion@0
-  inputs:
-    versionSpec: '3.8'
-    addToPath: true
-  displayName: 'Setup Python 3.8' 
+  jobs:
+  - job: Build
+    displayName: 'Build and Package'
 
-  # 3. Upgrade pip
-- script: |
-    python -m pip install --upgrade pip
-  displayName: 'Upgrade pip'
+    steps:
+
+    # 1. Checkout
+    - checkout: self
+      displayName: 'Checkout Source Code'
+
+    # 2. Python
+    - task: UsePythonVersion@0
+      inputs:
+        versionSpec: '3.8'
+      displayName: 'Setup Python'
+
+    # 3. Upgrade pip
+    - script: |
+        python -m pip install --upgrade pip
+      displayName: 'Upgrade pip'
+
+# trigger:
+#   branches:
+#     include:
+#       - main
+
+# pool:
+#   vmImage: 'ubuntu-latest'
+
+# steps:
+
+# # 1. Checkout source code
+# - checkout: self
+#   displayName: 'Checkout Source Code'
+
+#  # 2. Install Python
+# - task: UsePythonVersion@0
+#   inputs:
+#     versionSpec: '3.8'
+#     addToPath: true
+#   displayName: 'Setup Python 3.8' 
+
+#   # 3. Upgrade pip
+# - script: |
+#     python -m pip install --upgrade pip
+#   displayName: 'Upgrade pip'
+  
