@@ -39,6 +39,51 @@ stages:
     - script: |
         pip install -r requirement.txt
       displayName: 'Install Dependencies'
+    
+    # 5. Install unit test dependencies
+    - script: |
+        pip install pytest
+        pip install pytest-html
+      displayName: 'Install Unit Test Dependencies'
+  # ============================================================
+# STAGE 2: UNIT TEST
+# ============================================================
+
+- stage: UnitTest
+  displayName: 'Unit Testing'
+
+  dependsOn: Build
+
+  condition: succeeded()
+
+  jobs:
+
+  # ----------------------------------------------------------
+  # JOB 1: Run Unit Tests
+  # ----------------------------------------------------------
+
+  - job: RunUnitTests
+    displayName: 'Run Python Unit Tests'
+
+    steps:
+
+    # 5. Install unit test dependencies
+      - script: |
+          pip install pytest
+          pip install pytest-html
+        displayName: 'Install Unit Test Dependencies'
+
+  # 6. Check Python file
+      - script: |
+          python -m py_compile app.py
+          python -m py_compile house.py
+        displayName: 'Validate Python Code'
+
+        # 7. Create test result folder
+      - script: |
+          mkdir -p test-results
+        displayName: 'Create Test Result Folder'
+
 
 # trigger:
 #   branches:
