@@ -105,3 +105,27 @@ stages:
           failTaskOnFailedTests: false
         displayName: 'Publish Unit Test Results'
 
+# ============================================================
+# STAGE 3: ARTIFACT
+# ============================================================
+
+- stage: Artifact
+  displayName: 'Create Application Artifact'
+
+  dependsOn: UnitTest
+  condition: partiallySucceeded()
+
+  jobs:
+
+  - job: CreateArtifact
+    displayName: 'Package and Publish Application'
+
+    steps:
+      # 10. Publish HTML test report
+      - task: PublishPipelineArtifact@1
+        condition: always()
+        inputs:
+          targetPath: 'test-results'
+          artifact: 'unit-test-report'
+          publishLocation: 'pipeline'
+        displayName: 'Publish Unit Test Report'
