@@ -35,6 +35,11 @@ stages:
         python -m pip install --upgrade pip
       displayName: 'Upgrade pip'
 
+      # 4. Install project dependencies
+    - script: |
+        pip install -r requirement.txt
+        displayName: 'Install Dependencies'
+
 # trigger:
 #   branches:
 #     include:
