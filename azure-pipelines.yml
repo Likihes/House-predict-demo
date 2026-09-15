@@ -1,0 +1,13 @@
+trigger:
+  branches:
+    include:
+      - main
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+steps:
+
+# 1. Checkout source code
+- checkout: self
+  displayName: 'Checkout Source Code'
