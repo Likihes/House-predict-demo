@@ -113,7 +113,7 @@ stages:
   displayName: 'Create Application Artifact'
 
   dependsOn: UnitTest
-  condition: partiallySucceeded()
+  condition: succeeded()
 
   jobs:
 
