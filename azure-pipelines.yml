@@ -113,3 +113,30 @@ stages:
           artifact: 'unit-test-report'
           publishLocation: 'pipeline'
         displayName: 'Publish Unit Test Report'
+
+      # 11. Start Flask application
+      - script: |
+          python app.py &
+          sleep 10
+          echo "Flask application started successfully"
+        displayName: 'Start Flask Application'
+
+- stage: RunApplication
+  displayName: 'Run Flask Application'
+
+  dependsOn: Artifact
+
+  condition: succeeded()
+
+  jobs:
+
+  - job: RunApplication
+    displayName: 'Start Flask Application'
+
+    steps:
+
+    - script: |
+        python app.py & 
+        sleep 10 
+        echo "Flask application started successfully"
+      displayName: 'Start Flask Application'
