@@ -126,7 +126,7 @@ stages:
 
   dependsOn: Artifact
 
-  condition: succeeded()
+  # condition: succeeded()
 
   jobs:
 
