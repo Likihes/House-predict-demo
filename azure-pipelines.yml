@@ -124,9 +124,9 @@ stages:
 - stage: RunApplication
   displayName: 'Run Flask Application'
 
-  dependsOn: Artifact
+  dependsOn: UnitTest
 
-  # condition: succeeded()
+  condition: succeeded()
 
   jobs:
 
