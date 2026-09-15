@@ -38,7 +38,7 @@ stages:
       # 4. Install project dependencies
     - script: |
         pip install -r requirement.txt
-        displayName: 'Install Dependencies'
+      displayName: 'Install Dependencies'
 
 # trigger:
 #   branches:
