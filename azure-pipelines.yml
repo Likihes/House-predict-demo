@@ -152,6 +152,7 @@ stages:
 
     - script: |
         docker build \
+          -f dockerfile \
           -t likithacr-f7f2e3fbe3g6a7b5.azurecr.io/$(imageName):$(imageTag) \
           -t likithacr-f7f2e3fbe3g6a7b5.azurecr.io/$(imageName):latest \
           .
@@ -203,22 +204,8 @@ stages:
       inputs:
         command: 'buildAndPush'
         repository: 'likithacr-f7f2e3fbe3g6a7b5.azurecr.io/$(imageName)'
-        Dockerfile: 'docker/Dockerfile'
+        Dockerfile: 'dockerfile'
         buildContext: '$(Build.SourcesDirectory)'
-        tags: |
-          $(imageTag)
-          latest
-
-    # ========================================================
-    # BUILD AND PUSH DOCKER IMAGE
-    # ========================================================
-
-    - task: Docker@2
-      displayName: 'Build and Push Docker Image'
-      inputs:
-        command: 'buildAndPush'
-        repository: 'likithacr-f7f2e3fbe3g6a7b5.azurecr.io/$(imageName)'
-        Dockerfile: 'Dockerfile'
         tags: |
           $(imageTag)
           latest
