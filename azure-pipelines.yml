@@ -114,7 +114,7 @@ stages:
           publishLocation: 'pipeline'
         displayName: 'Publish Unit Test Report'
 
-# ============================================================
+## ============================================================
 # STAGE 4: DOCKER BUILD
 # ============================================================
 
@@ -138,21 +138,32 @@ stages:
     - checkout: self
       displayName: 'Checkout Source Code'
 
+    # ========================================================
+    # CHECK DOCKER VERSION
+    # ========================================================
+
     - script: |
         docker --version
       displayName: 'Check Docker Version'
 
+    # ========================================================
+    # BUILD DOCKER IMAGE
+    # ========================================================
+
     - script: |
         docker build \
-          -t $(ecrRegistry)/$(imageName):$(imageTag) \
-          -t $(ecrRegistry)/$(imageName):latest \
+          -t likithacr-f7f2e3fbe3g6a7b5.azurecr.io/$(imageName):$(imageTag) \
+          -t likithacr-f7f2e3fbe3g6a7b5.azurecr.io/$(imageName):latest \
           .
       displayName: 'Build Docker Image'
+
+    # ========================================================
+    # VERIFY DOCKER IMAGE
+    # ========================================================
 
     - script: |
         docker images
       displayName: 'Verify Docker Image'
-
 # ============================================================
 # STAGE 5: PUSH DOCKER IMAGE TO ACR
 # ============================================================
@@ -177,20 +188,25 @@ stages:
     - checkout: self
       displayName: 'Checkout Source Code'
 
-    # Login to Azure Container Registry
-    - task: Docker@2
-      displayName: 'Login to ACR'
-      inputs:
-        command: 'login'
-        containerRegistry: 'housepriceAcrConnection'
+    # ========================================================
+    # LOGIN TO ACR USING REPOSITORY TOKEN
+    # ========================================================
 
-    # Build and Push Docker Image
+    - script: |
+        echo "$(ACR_PASSWORD)" | docker login likithacr-f7f2e3fbe3g6a7b5.azurecr.io \
+          --username "$(ACR_USERNAME)" \
+          --password-stdin
+      displayName: 'Login to ACR'
+
+    # ========================================================
+    # BUILD AND PUSH DOCKER IMAGE
+    # ========================================================
+
     - task: Docker@2
-      displayName: 'Push Docker Image to ACR'
+      displayName: 'Build and Push Docker Image'
       inputs:
         command: 'buildAndPush'
-        containerRegistry: 'housepriceAcrConnection'
-        repository: '$(imageName)'
+        repository: 'likithacr-f7f2e3fbe3g6a7b5.azurecr.io/$(imageName)'
         Dockerfile: 'Dockerfile'
         tags: |
           $(imageTag)
