@@ -121,7 +121,7 @@ stages:
 - stage: DockerBuild
   displayName: 'Docker Build'
 
-  dependsOn: RunApplication
+  dependsOn: UnitTest
 
   condition: succeeded()
 

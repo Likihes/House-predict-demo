@@ -92,3 +92,4 @@ steps:
     sleep 10
     echo "Flask application started successfully"
   displayName: 'Start Flask Application'
+  
