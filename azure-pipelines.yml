@@ -198,6 +198,17 @@ stages:
           --password-stdin
       displayName: 'Login to ACR'
 
+    - task: Docker@2
+      displayName: 'Build and Push Docker Image'
+      inputs:
+        command: 'buildAndPush'
+        repository: 'likithacr-f7f2e3fbe3g6a7b5.azurecr.io/$(imageName)'
+        Dockerfile: 'docker/Dockerfile'
+        buildContext: '$(Build.SourcesDirectory)'
+        tags: |
+          $(imageTag)
+          latest
+
     # ========================================================
     # BUILD AND PUSH DOCKER IMAGE
     # ========================================================
