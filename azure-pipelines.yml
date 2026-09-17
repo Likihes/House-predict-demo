@@ -114,29 +114,111 @@ stages:
           publishLocation: 'pipeline'
         displayName: 'Publish Unit Test Report'
 
-      # 11. Start Flask application
-      - script: |
-          python app.py &
-          sleep 10
-          echo "Flask application started successfully"
-        displayName: 'Start Flask Application'
+# ============================================================
+# STAGE 4: DOCKER BUILD
+# ============================================================
 
-- stage: RunApplication
-  displayName: 'Run Flask Application'
+- stage: DockerBuild
+  displayName: 'Docker Build'
 
-  dependsOn: UnitTest
+  dependsOn: RunApplication
 
   condition: succeeded()
 
+  variables:
+  - group: houseprice-docker-vars
+
   jobs:
 
-  - job: RunApplication
-    displayName: 'Start Flask Application'
+  - job: DockerBuild
+    displayName: 'Build Docker Image'
 
     steps:
 
+    - checkout: self
+      displayName: 'Checkout Source Code'
+
     - script: |
-        python app.py & 
-        sleep 10 
-        echo "Flask application started successfully"
-      displayName: 'Start Flask Application'
+        docker --version
+      displayName: 'Check Docker Version'
+
+    - script: |
+        docker build \
+          -t $(ecrRegistry)/$(imageName):$(imageTag) \
+          -t $(ecrRegistry)/$(imageName):latest \
+          .
+      displayName: 'Build Docker Image'
+
+    - script: |
+        docker images
+      displayName: 'Verify Docker Image'
+
+# ============================================================
+# STAGE 5: PUSH DOCKER IMAGE TO ACR
+# ============================================================
+
+- stage: PushToACR
+  displayName: 'Push Docker Image to ACR'
+
+  dependsOn: DockerBuild
+
+  condition: succeeded()
+
+  variables:
+  - group: houseprice-docker-vars
+
+  jobs:
+
+  - job: PushDockerImage
+    displayName: 'Push Image to Azure Container Registry'
+
+    steps:
+
+    - checkout: self
+      displayName: 'Checkout Source Code'
+
+    # Login to Azure Container Registry
+    - task: Docker@2
+      displayName: 'Login to ACR'
+      inputs:
+        command: 'login'
+        containerRegistry: 'housepriceAcrConnection'
+
+    # Build and Push Docker Image
+    - task: Docker@2
+      displayName: 'Push Docker Image to ACR'
+      inputs:
+        command: 'buildAndPush'
+        containerRegistry: 'housepriceAcrConnection'
+        repository: '$(imageName)'
+        Dockerfile: 'Dockerfile'
+        tags: |
+          $(imageTag)
+          latest
+
+      # # 11. Start Flask application
+      # - script: |
+      #     python app.py &
+      #     sleep 10
+      #     echo "Flask application started successfully"
+      #   displayName: 'Start Flask Application'
+
+# - stage: RunApplication
+#   displayName: 'Run Flask Application'
+
+#   dependsOn: UnitTest
+
+#   condition: succeeded()
+
+#   jobs:
+
+#   - job: RunApplication
+#     displayName: 'Start Flask Application'
+
+#     steps:
+
+#     - script: |
+#         python app.py & 
+#         sleep 10 
+#         echo "Flask application started successfully"
+#       displayName: 'Start Flask Application'
