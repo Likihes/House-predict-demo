@@ -113,27 +113,26 @@ stages:
           artifact: 'unit-test-report'
           publishLocation: 'pipeline'
         displayName: 'Publish Unit Test Report'
-
-## ============================================================
+# ============================================================
 # STAGE 4: DOCKER BUILD
 # ============================================================
 
 - stage: DockerBuild
   displayName: 'Docker Build'
-
   dependsOn: UnitTest
-
   condition: succeeded()
-
   variables:
   - group: houseprice-docker-vars
 
   jobs:
-
   - job: DockerBuild
     displayName: 'Build Docker Image'
 
     steps:
+
+    # ========================================================
+    # CHECKOUT SOURCE CODE
+    # ========================================================
 
     - checkout: self
       displayName: 'Checkout Source Code'
@@ -141,10 +140,24 @@ stages:
     # ========================================================
     # CHECK DOCKER VERSION
     # ========================================================
-
     - script: |
         docker --version
       displayName: 'Check Docker Version'
+
+    # ========================================================
+    # VERIFY DOCKERFILE
+    # ========================================================
+
+    - script: |
+        echo "Current directory:"
+        pwd
+
+        echo "Repository contents:"
+        ls -la
+
+        echo "Dockerfile:"
+        ls -l dockerfile
+      displayName: 'Verify Dockerfile'
 
     # ========================================================
     # BUILD DOCKER IMAGE
@@ -152,9 +165,8 @@ stages:
 
     - script: |
         docker build \
-          -f dockerfile \
           -t likithacr-f7f2e3fbe3g6a7b5.azurecr.io/$(imageName):$(imageTag) \
-          -t likithacr-f7f2e3fbe3g6a7b5.azurecr.io/$(imageName):latest \
+          -f dockerfile \
           .
       displayName: 'Build Docker Image'
 
@@ -165,50 +177,194 @@ stages:
     - script: |
         docker images
       displayName: 'Verify Docker Image'
+
+    # ========================================================
+    # SAVE DOCKER IMAGE
+    # ========================================================
+
+    - script: |
+        docker save \
+          -o $(Build.ArtifactStagingDirectory)/docker-image.tar \
+          likithacr-f7f2e3fbe3g6a7b5.azurecr.io/$(imageName):$(imageTag)
+      displayName: 'Save Docker Image'
+
+    # ========================================================
+    # PUBLISH DOCKER IMAGE AS PIPELINE ARTIFACT
+    # ========================================================
+
+    - task: PublishPipelineArtifact@1
+      displayName: 'Publish Docker Image Artifact'
+      inputs:
+        targetPath: '$(Build.ArtifactStagingDirectory)/docker-image.tar'
+        artifact: 'docker-image'
+
+
 # ============================================================
 # STAGE 5: PUSH DOCKER IMAGE TO ACR
 # ============================================================
 
 - stage: PushToACR
   displayName: 'Push Docker Image to ACR'
-
   dependsOn: DockerBuild
-
   condition: succeeded()
 
   variables:
   - group: houseprice-docker-vars
 
   jobs:
-
   - job: PushDockerImage
     displayName: 'Push Image to Azure Container Registry'
 
     steps:
 
+    # ========================================================
+    # CHECKOUT SOURCE CODE
+    # ========================================================
     - checkout: self
       displayName: 'Checkout Source Code'
+
+    # ========================================================
+    # DOWNLOAD DOCKER IMAGE ARTIFACT
+    # ========================================================
+    - download: current
+      artifact: docker-image
+      displayName: 'Download Docker Image Artifact'
+
+    # ========================================================
+    # LOAD DOCKER IMAGE
+    # ========================================================
+    - script: |
+        docker load \
+          -i $(Pipeline.Workspace)/docker-image/docker-image.tar
+
+        echo "Docker image after loading:"
+        docker images
+      displayName: 'Load Docker Image'
 
     # ========================================================
     # LOGIN TO ACR USING REPOSITORY TOKEN
     # ========================================================
 
     - script: |
-        echo "$(ACR_PASSWORD)" | docker login likithacr-f7f2e3fbe3g6a7b5.azurecr.io \
+        echo "$(ACR_PASSWORD)" | docker login \
+          likithacr-f7f2e3fbe3g6a7b5.azurecr.io \
           --username "$(ACR_USERNAME)" \
           --password-stdin
       displayName: 'Login to ACR'
 
-    - task: Docker@2
-      displayName: 'Build and Push Docker Image'
-      inputs:
-        command: 'buildAndPush'
-        repository: 'likithacr-f7f2e3fbe3g6a7b5.azurecr.io/$(imageName)'
-        Dockerfile: 'dockerfile'
-        buildContext: '$(Build.SourcesDirectory)'
-        tags: |
-          $(imageTag)
-          latest
+    # ========================================================
+    # PUSH DOCKER IMAGE TO ACR
+    # ========================================================
+
+    - script: |
+        docker push \
+          likithacr-f7f2e3fbe3g6a7b5.azurecr.io/$(imageName):$(imageTag)
+      displayName: 'Push Docker Image to ACR'
+
+    # ========================================================
+    # VERIFY DOCKER IMAGE
+    # ========================================================
+
+    - script: |
+        docker images
+      displayName: 'Verify Docker Image'
+
+
+# ## ============================================================
+# # STAGE 4: DOCKER BUILD
+# # ============================================================
+
+# - stage: DockerBuild
+#   displayName: 'Docker Build'
+
+#   dependsOn: UnitTest
+
+#   condition: succeeded()
+
+#   variables:
+#   - group: houseprice-docker-vars
+
+#   jobs:
+
+#   - job: DockerBuild
+#     displayName: 'Build Docker Image'
+
+#     steps:
+
+#     - checkout: self
+#       displayName: 'Checkout Source Code'
+
+#     # ========================================================
+#     # CHECK DOCKER VERSION
+#     # ========================================================
+
+#     - script: |
+#         docker --version
+#       displayName: 'Check Docker Version'
+
+#     # ========================================================
+#     # BUILD DOCKER IMAGE
+#     # ========================================================
+
+#     - script: |
+#         docker build \
+#           -f dockerfile \
+#           -t likithacr-f7f2e3fbe3g6a7b5.azurecr.io/$(imageName):$(imageTag) \
+#           -t likithacr-f7f2e3fbe3g6a7b5.azurecr.io/$(imageName):latest \
+#           .
+#       displayName: 'Build Docker Image'
+
+#     # ========================================================
+#     # VERIFY DOCKER IMAGE
+#     # ========================================================
+
+#     - script: |
+#         docker images
+#       displayName: 'Verify Docker Image'
+# # ============================================================
+# # STAGE 5: PUSH DOCKER IMAGE TO ACR
+# # ============================================================
+
+# - stage: PushToACR
+#   displayName: 'Push Docker Image to ACR'
+
+#   dependsOn: DockerBuild
+
+#   condition: succeeded()
+
+#   variables:
+#   - group: houseprice-docker-vars
+
+#   jobs:
+
+#   - job: PushDockerImage
+#     displayName: 'Push Image to Azure Container Registry'
+
+#     steps:
+
+#     - checkout: self
+#       displayName: 'Checkout Source Code'
+
+#     # ========================================================
+#     # LOGIN TO ACR USING REPOSITORY TOKEN
+#     # ========================================================
+
+#     - script: |
+#         echo "$(ACR_PASSWORD)" | docker login likithacr-f7f2e3fbe3g6a7b5.azurecr.io \
+#           --username "$(ACR_USERNAME)" \
+#           --password-stdin
+#       displayName: 'Login to ACR'
+
+#     - task: Docker@2
+#       displayName: 'Build and Push Docker Image'
+#       inputs:
+#         command: 'buildAndPush'
+#         repository: 'likithacr-f7f2e3fbe3g6a7b5.azurecr.io/$(imageName)'
+#         Dockerfile: 'dockerfile'
+#         buildContext: '$(Build.SourcesDirectory)'
+#         tags: |
+#           $(imageTag)
+#           latest
 
       # # 11. Start Flask application
       # - script: |
