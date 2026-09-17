@@ -260,7 +260,7 @@ stages:
         docker push \
           likithacr-f7f2e3fbe3g6a7b5.azurecr.io/$(imageName):$(imageTag)
       displayName: 'Push Docker Image to ACR'
-
+#########
     # ========================================================
     # VERIFY DOCKER IMAGE
     # ========================================================
