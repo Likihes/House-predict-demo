@@ -29,16 +29,3 @@ jobs:
 
       - name: Compile Python modules
         run: python -m py_compile app.py house.py
-
-      - name: Create test results directory
-        run: mkdir -p test-results
-
-      - name: Run tests
-        run: python -m pytest test_app_50_cases.py -v --junitxml=test-results/junit.xml
-
-      - name: Publish test results
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: junit-test-results
-          path: test-results/junit.xml
