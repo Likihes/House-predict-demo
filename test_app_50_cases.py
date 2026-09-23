@@ -262,63 +262,6 @@ def test_35_predict_route_supports_get_method(app_module):
 
 
 # ===================================================================
-# INTENTIONALLY FAILING TESTS (36-45)
-# These are deliberately incorrect expectations for CI training/demo.
-# ===================================================================
-
-def test_36_FAIL_root_should_return_201(client):
-    response = client.get("/")
-    assert response.status_code == 201
-
-
-def test_37_FAIL_predict_should_return_json(client):
-    response = client.post("/predict", data=valid_form())
-    assert response.is_json is True
-
-
-def test_38_FAIL_unknown_route_should_return_200(client):
-    response = client.get("/unknown")
-    assert response.status_code == 200
-
-
-def test_39_FAIL_root_post_should_be_allowed(client):
-    response = client.post("/")
-    assert response.status_code == 200
-
-
-def test_40_FAIL_predict_get_should_succeed_without_form(client):
-    response = client.get("/predict")
-    assert response.status_code == 200
-
-
-def test_41_FAIL_missing_bedrooms_should_succeed(client):
-    data = valid_form()
-    data.pop("bedrooms")
-    response = client.post("/predict", data=data)
-    assert response.status_code == 200
-
-
-def test_42_FAIL_app_should_have_health_route(app_module):
-    rules = [rule.rule for rule in app_module.app.url_map.iter_rules()]
-    assert "/health" in rules
-
-
-def test_43_FAIL_prediction_should_be_string():
-    prediction = DummyModel().predict([[3, 2, 1, 2005]])
-    assert isinstance(prediction, str)
-
-
-def test_44_FAIL_feature_count_should_be_five():
-    values = np.array(list(valid_form().values()))
-    assert len(values) == 5
-
-
-def test_45_FAIL_model_prediction_should_be_negative():
-    prediction = DummyModel().predict([[3, 2, 1, 2005]])
-    assert prediction[0] < 0
-
-
-# ===================================================================
 # SKIPPED TESTS (46-50)
 # ===================================================================
 
